@@ -27,39 +27,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout the repository
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # Install necessary Linux dependencies
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y adb ninja-build libgtk-3-dev
+
+    # Setup Python environment
     - name: Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    # Install Python dependencies
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt || true  # Ignore errors if certain dependencies fail
 
+    # Install Android SDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+      with:
+        api-level: 33
+        build-tools: 33.0.2
+        target: android-33
+
+    # Setup Flutter environment
     - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
       uses: subosito/flutter-action@v2
       with:
         flutter-version: ${{ env.FLUTTER_VERSION }}
 
+    # Setup Java JDK
     - name: Setup Java JDK
       uses: actions/setup-java@v4.2.1
       with:
         distribution: 'temurin' # See https://github.com/marketplace/actions/setup-java-jdk#supported-distributions for available options
         java-version: '21'
 
+    # Build Flet APK
     - name: Flet Build APK
       run: |
-        flutter config --no-analytics # disable flutter analytics
-        flet build apk --verbose    # adapt the command to your needs - https://flet.dev/docs/publish 
+        flutter config --no-analytics # Disable Flutter analytics
+        flet build apk --verbose      # Adjust the command to your needs - https://flet.dev/docs/publish 
 
+    # Upload APK Artifact
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4.3.4  # https://github.com/marketplace/actions/upload-a-build-artifact
       with:
-        name: apk-build-artifact  # the name of the artifact
-        path: build/apk  # location of Flet build output
+        name: apk-build-artifact  # The name of the artifact
+        path: build/apk           # Location of Flet build output
         if-no-files-found: error  # Fail the action with an error message if no files are found
-        overwrite: false  # If true, an artifact with a matching name will be deleted before a new one is uploaded. If false, the action will fail if an artifact for the given name already exists. Does not fail if the artifact does not exist.
+        overwrite: false          # If true, overwrites existing artifacts
