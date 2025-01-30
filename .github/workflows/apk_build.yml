@@ -1,22 +1,17 @@
 name: APK Build
 
 on:
-  # Runs on push to any of the below branches
   push:
     branches:
       - master
       - main
-  # Runs on pull request events that target one of the below branches
   pull_request:
     branches:
       - master
       - main
-
-  # Allows you to run this workflow manually from the Actions tab of the repository
   workflow_dispatch:
 
 env:
-  # https://flet.dev/docs/publish#versioning
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.12.8
@@ -69,6 +64,17 @@ jobs:
       with:
         distribution: 'temurin' # See https://github.com/marketplace/actions/setup-java-jdk#supported-distributions for available options
         java-version: '21'
+
+    # Install Android Studio
+    - name: Install Android Studio
+      run: |
+        sudo apt update
+        sudo apt install -y wget unzip
+        wget https://redirector.gvt1.com/edgedl/android/studio/ide-zips/2023.2.1.20/android-studio-2023.2.1.20-linux.tar.gz
+        tar -xvzf android-studio-2023.2.1.20-linux.tar.gz -C /opt
+        export PATH="/opt/android-studio/bin:$PATH"
+        echo "export PATH=\"/opt/android-studio/bin:$PATH\"" >> ~/.bashrc
+        source ~/.bashrc
 
     # Build Flet APK
     - name: Flet Build APK
